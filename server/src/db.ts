@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 export const connectDB = async() => {
     try{
-        await mongoose.connect("mongodb+srv://sreyasrao21_db_user:993hPfu2wKcJtJnt@cluster0.4iazohp.mongodb.net/kirana_db?retryWrites=true&w=majority");
+        await mongoose.connect("MONGO_URI");
         console.log("MongoDB Connected");
     }
     catch (error){
