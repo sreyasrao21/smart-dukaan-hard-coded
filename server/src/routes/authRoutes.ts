@@ -1,5 +1,7 @@
 import express from 'express';
 import User from '../models/User';
+import Product from '../models/Product';
+import { starterProducts } from '../utils/starterProducts';
 
 const router = express.Router();
 
@@ -8,8 +10,6 @@ const router = express.Router();
 // });
 
 router.post('/signup', async (req, res) => {
-    console.log("🔥 SIGNUP HIT");
-    console.log("BODY:", req.body);
 
     const { name, email, username, phoneNumber, password } = req.body;
 
@@ -23,8 +23,23 @@ router.post('/signup', async (req, res) => {
         });
 
         const savedUser = await user.save();
-
-        console.log("✅ SAVED USER:", savedUser);
+        
+        try{
+            const initialProducts = starterProducts.map((item:any)=>({
+                shopKeeperId:user._id,
+                name:item.name,
+                price:item.price,
+                stock:item.stock,
+                unit:item.unit,
+                icon:item.icon,
+                category:item.category,
+                
+            }));
+            await Product.insertMany(initialProducts);
+        }
+        catch(err){
+            console.error('Product Seeding Failed',err);
+        }
 
         return res.status(201).json({
             message: 'User created successfully',
@@ -33,36 +48,11 @@ router.post('/signup', async (req, res) => {
         });
 
     } catch (error: any) {
-        console.log("❌ SIGNUP ERROR:", error);
         return res.status(500).json({
             message: 'Error creating user',
             success: false,
             error: error.message
         });
-    }
-});
-
-router.post('/signup1', async (req, res) => {
-    const { name, email, username, phoneNumber, password } = req.body;
-
-    try {
-        const user = new User({
-            name,
-            email,
-            username,
-            phoneNumber,
-            password
-        });
-
-        await user.save();
-
-        res.status(201).json({
-            message: 'User created successfully',
-            success:true,
-            user
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Error creating user', success: false , error });
     }
 });
 
@@ -85,9 +75,11 @@ router.post('/login', async (req , res) => {
             })
         }
         
+
         return res.status(200).json({
             message:"Login Successful!",
             success: true,
+            user: user._id,
         });
     }
     catch(error){

@@ -168,15 +168,20 @@ export default function AuthScreen({ navigation }: any) {
             paddingBottom: 5,
           }}
           onPress={async () => {
-            const response = await login({
-              username,
-              password,
-            });
+            try {
+              const response = await login({
+                username,
+                password,
+              });
 
-            if (response.success) {
-              navigation.navigate("Home");
-            } else {
-              alert("Invalid Login");
+              if (response.success) {
+                navigation.navigate("Home", { shopKeeperId: response.user });
+              } else {
+                alert("Invalid Login");
+              }
+            } catch (err) {
+              alert("Invalid Credentials");
+              console.log(err);
             }
           }}
         >
