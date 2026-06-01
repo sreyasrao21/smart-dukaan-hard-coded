@@ -1,8 +1,10 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import Product from '../models/Product';
 import { starterProducts } from '../utils/starterProducts';
+import authMiddleware from '../middleware/authMiddleware';
 
 const router = express.Router();
 
@@ -47,6 +49,7 @@ router.post('/signup', async (req, res) => {
         return res.status(201).json({
             message: 'User created successfully',
             success: true,
+            token: jwt.sign({ userId: savedUser._id }, process.env.JWT_SECRET as string, { expiresIn: '1h' }),
             user: {
                 _id: savedUser._id,
                 name: savedUser.name,
@@ -90,7 +93,12 @@ router.post('/login', async (req , res) => {
         return res.status(200).json({
             message:"Login Successful!",
             success: true,
-            user: user._id,
+            token: jwt.sign({ userId: user._id }, process.env.JWT_SECRET as string, { expiresIn: '1h' }),
+            user: {
+                _id: user._id,
+                name: user.name,
+                username: user.username,
+            }
         });
     }
     catch(error){
@@ -99,3 +107,16 @@ router.post('/login', async (req , res) => {
 });
 
 export default router;
+
+router.get('/me', authMiddleware, async (req, res) => {
+    try {
+        const userId = (req as any).userId;
+        const user = await User.findById(userId).select('-password');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        return res.json({ success: true, user });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: 'Error fetching user', error: err });
+    }
+});
