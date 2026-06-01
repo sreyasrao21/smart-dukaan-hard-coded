@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import {connectDB} from './db';
@@ -24,7 +25,7 @@ app.post("/test", (req, res) => {
     });
 });
 
-const PORT= 5000;
+const PORT= process.env.PORT || 5000;
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
