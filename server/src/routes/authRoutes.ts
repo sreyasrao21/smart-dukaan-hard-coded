@@ -1,4 +1,5 @@
 import express from 'express';
+import bcrypt from 'bcryptjs';
 import User from '../models/User';
 import Product from '../models/Product';
 import { starterProducts } from '../utils/starterProducts';
@@ -14,12 +15,14 @@ router.post('/signup', async (req, res) => {
     const { name, email, username, phoneNumber, password } = req.body;
 
     try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const user = new User({
             name,
             email,
             username,
             phoneNumber,
-            password
+            password: hashedPassword
         });
 
         const savedUser = await user.save();
@@ -44,7 +47,13 @@ router.post('/signup', async (req, res) => {
         return res.status(201).json({
             message: 'User created successfully',
             success: true,
-            user: savedUser
+            user: {
+                _id: savedUser._id,
+                name: savedUser.name,
+                email: savedUser.email,
+                username: savedUser.username,
+                phoneNumber: savedUser.phoneNumber,
+            }
         });
 
     } catch (error: any) {
@@ -68,7 +77,9 @@ router.post('/login', async (req , res) => {
             });
         }
 
-        if(user.password !== password){
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if(!isPasswordValid){
             return res.status(400).json({
                 message:"Invalid Password",
                 success:false,
